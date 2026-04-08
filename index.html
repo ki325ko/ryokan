@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湯雲閣 | 福井あわら温泉の老舗旅館</title>
+  <meta name="description" content="福井県あわら温泉の山あいに佇む老舗温泉旅館「湯雲閣」。源泉かけ流しの湯と越前の旬の味覚でおもてなし。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f7f3ee; }
+    ::-webkit-scrollbar-thumb { background: #c4a87c; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    setIsMobile(mq.matches);
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
+const FONTS_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
+`;
+
+const PAGES = {
+  HOME: "home",
+  ROOMS: "rooms",
+  ONSEN: "onsen",
+  CUISINE: "cuisine",
+  PLANS: "plans",
+  ACCESS: "access",
+  FAQ: "faq",
+  RESERVE: "reserve",
+};
+
+const NAV_ITEMS = [
+  { id: PAGES.HOME, label: "トップ", labelEn: "TOP" },
+  { id: PAGES.ROOMS, label: "客室", labelEn: "ROOMS" },
+  { id: PAGES.ONSEN, label: "温泉", labelEn: "ONSEN" },
+  { id: PAGES.CUISINE, label: "お料理", labelEn: "CUISINE" },
+  { id: PAGES.PLANS, label: "料金・プラン", labelEn: "PLANS" },
+  { id: PAGES.ACCESS, label: "アクセス", labelEn: "ACCESS" },
+  { id: PAGES.FAQ, label: "よくあるご質問", labelEn: "FAQ" },
+  { id: PAGES.RESERVE, label: "ご予約", labelEn: "RESERVE" },
+];
+
+// Unsplash images
+const IMG = {
+  hero: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1400&h=800&fit=crop",
+  hero2: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=1400&h=800&fit=crop",
+  onsen1: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=900&h=600&fit=crop",
+  onsen2: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=900&h=600&fit=crop",
+  onsen3: "https://images.unsplash.com/photo-1583416750470-965b2707b355?w=900&h=600&fit=crop",
+  room1: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=900&h=600&fit=crop",
+  room2: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=900&h=600&fit=crop",
+  room3: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=900&h=600&fit=crop",
+  food1: "https://images.unsplash.com/photo-1553621042-f6e147245754?w=900&h=600&fit=crop",
+  food2: "https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?w=900&h=600&fit=crop",
+  food3: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=900&h=600&fit=crop",
+  garden: "https://images.unsplash.com/photo-1464146072230-91cabc968266?w=900&h=600&fit=crop",
+  exterior: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&h=600&fit=crop",
+  bamboo: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=900&h=600&fit=crop",
+};
+
+function FadeIn({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(32px)",
+        transition: `opacity 0.8s ease ${delay}s, transform 0.8s ease ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({ ja, en, light = false }) {
+  return (
+    <div style={{ textAlign: "center", marginBottom: 48 }}>
+      <p style={{
+        fontFamily: "'Zen Kaku Gothic New', sans-serif",
+        fontSize: 11, letterSpacing: 6, textTransform: "uppercase",
+        color: light ? "rgba(255,255,255,0.5)" : "#8b7355", marginBottom: 8,
+      }}>{en}</p>
+      <h2 style={{
+        fontFamily: "'Shippori Mincho', serif", fontSize: "clamp(24px, 4vw, 36px)",
+        fontWeight: 400, color: light ? "#fff" : "#2c2418", margin: 0, letterSpacing: 4,
+      }}>{ja}</h2>
+      <div style={{
+        width: 40, height: 1, margin: "16px auto 0",
+        background: light ? "rgba(255,255,255,0.3)" : "#c4a87c",
+      }} />
+    </div>
+  );
+}
+
+function PageHero({ title, titleEn, image }) {
+  return (
+    <div style={{
+      position: "relative", height: 340, overflow: "hidden",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center",
+        filter: "brightness(0.45)",
+      }} />
+      <div style={{ position: "relative", textAlign: "center", color: "#fff" }}>
+        <p style={{
+          fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11,
+          letterSpacing: 6, opacity: 0.5, marginBottom: 8,
+        }}>{titleEn}</p>
+        <h1 style={{
+          fontFamily: "'Shippori Mincho', serif", fontSize: "clamp(28px, 5vw, 42px)",
+          fontWeight: 400, letterSpacing: 6, margin: 0,
+        }}>{title}</h1>
+      </div>
+    </div>
+  );
+}
+
+// ======================== HOME ========================
+function HomePage({ navigate }) {
+  const [heroIdx, setHeroIdx] = useState(0);
+  const heroes = [IMG.hero, IMG.hero2, IMG.exterior];
+  useEffect(() => {
+    const t = setInterval(() => setHeroIdx(i => (i + 1) % heroes.length), 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div>
+      {/* Hero */}
+      <div style={{ position: "relative", height: "85vh", minHeight: 500, overflow: "hidden" }}>
+        {heroes.map((src, i) => (
+          <div key={i} style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center",
+            opacity: heroIdx === i ? 1 : 0,
+            transition: "opacity 1.5s ease",
+          }} />
+        ))}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
+        }} />
+        <div style={{
+          position: "relative", height: "100%",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          color: "#fff", textAlign: "center", padding: "0 20px",
+        }}>
+          <p style={{
+            fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11,
+            letterSpacing: 8, opacity: 0.6, marginBottom: 16,
+          }}>FUKUI AWARA ONSEN</p>
+          <h1 style={{
+            fontFamily: "'Shippori Mincho', serif",
+            fontSize: "clamp(36px, 7vw, 72px)", fontWeight: 400,
+            letterSpacing: 12, margin: 0, lineHeight: 1.3,
+          }}>湯雲閣</h1>
+          <p style={{
+            fontFamily: "'Shippori Mincho', serif", fontSize: "clamp(14px, 2vw, 18px)",
+            fontWeight: 300, letterSpacing: 6, marginTop: 12, opacity: 0.8,
+          }}>ゆうんかく</p>
+          <p style={{
+            fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 13,
+            letterSpacing: 3, marginTop: 32, opacity: 0.6, maxWidth: 400,
+            lineHeight: 2,
+          }}>雲のあいだに湯けむりが立ちのぼる<br />奥越前の静かな宿</p>
+          <div style={{ display: "flex", gap: 8, marginTop: 32 }}>
+            {heroes.map((_, i) => (
+              <button key={i} onClick={() => setHeroIdx(i)} style={{
+                width: heroIdx === i ? 24 : 8, height: 2,
+                background: heroIdx === i ? "#fff" : "rgba(255,255,255,0.4)",
+                border: "none", borderRadius: 1, cursor: "pointer",
+                transition: "all 0.3s ease",
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Intro */}
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <FadeIn>
+          <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
+            <SectionTitle ja="湯雲閣について" en="ABOUT" />
+            <p style={{
+              fontFamily: "'Noto Serif JP', serif", fontSize: 15, lineHeight: 2.4,
+              color: "#4a4035", letterSpacing: 1,
+            }}>
+              福井県あわら温泉の山あいに佇む「湯雲閣」は、<br />
+              創業明治三十二年の老舗温泉旅館でございます。<br />
+              四季折々の自然に囲まれた静寂の中、<br />
+              源泉かけ流しの湯と越前の旬の味覚で<br />
+              心からのおくつろぎをお届けいたします。
+            </p>
+          </div>
+        </FadeIn>
+      </div>
+
+      {/* Features grid */}
+      <div style={{ background: "#2c2418", padding: "80px 20px" }}>
+        <FadeIn>
+          <SectionTitle ja="湯雲閣の魅力" en="FEATURES" light />
+        </FadeIn>
+        <div style={{
+          maxWidth: 1100, margin: "0 auto",
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24,
+        }}>
+          {[
+            { img: IMG.onsen1, title: "源泉かけ流しの湯", desc: "地下1,200mから湧き出る自家源泉。ナトリウム塩化物泉の柔らかな湯が心身を癒します。", page: PAGES.ONSEN },
+            { img: IMG.room1, title: "趣ある客室", desc: "全室から庭園を望む落ち着いた和の空間。露天風呂付き客室もご用意しております。", page: PAGES.ROOMS },
+            { img: IMG.food1, title: "越前の味覚", desc: "越前がに、若狭ぐじなど地元の厳選食材を匠の技で仕上げる本格会席料理。", page: PAGES.CUISINE },
+          ].map((item, i) => (
+            <FadeIn key={i} delay={i * 0.15}>
+              <div
+                onClick={() => navigate(item.page)}
+                style={{
+                  cursor: "pointer", overflow: "hidden", borderRadius: 2,
+                  background: "#1a1610", transition: "transform 0.3s ease",
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+              >
+                <div style={{ overflow: "hidden", height: 220 }}>
+                  <img src={item.img} alt="" style={{
+                    width: "100%", height: "100%", objectFit: "cover",
+                    transition: "transform 0.6s ease",
+                  }}
+                    onMouseEnter={e => e.target.style.transform = "scale(1.05)"}
+                    onMouseLeave={e => e.target.style.transform = "scale(1)"}
+                  />
+                </div>
+                <div style={{ padding: "24px 20px 28px" }}>
+                  <h3 style={{
+                    fontFamily: "'Shippori Mincho', serif", fontSize: 18,
+                    color: "#e8dcc8", fontWeight: 400, marginBottom: 12, letterSpacing: 2,
+                  }}>{item.title}</h3>
+                  <p style={{
+                    fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                    color: "rgba(255,255,255,0.5)", lineHeight: 2, margin: 0,
+                  }}>{item.desc}</p>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+
+      {/* Seasonal banner */}
+      <div style={{
+        position: "relative", height: 360, overflow: "hidden",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `url(${IMG.bamboo})`, backgroundSize: "cover",
+          backgroundPosition: "center", filter: "brightness(0.4)",
+        }} />
+        <FadeIn>
+          <div style={{ position: "relative", textAlign: "center", color: "#fff", padding: "0 20px" }}>
+            <p style={{
+              fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11,
+              letterSpacing: 6, opacity: 0.5, marginBottom: 12,
+            }}>SEASONAL</p>
+            <h2 style={{
+              fontFamily: "'Shippori Mincho', serif", fontSize: "clamp(22px, 4vw, 32px)",
+              fontWeight: 400, letterSpacing: 6, marginBottom: 16,
+            }}>春の特別プラン</h2>
+            <p style={{
+              fontFamily: "'Noto Serif JP', serif", fontSize: 14, lineHeight: 2.2,
+              opacity: 0.7, maxWidth: 450, margin: "0 auto",
+            }}>
+              桜舞う季節、越前の春の味覚とともに。<br />
+              期間限定の特別会席と貸切露天風呂をお楽しみください。
+            </p>
+            <button
+              onClick={() => navigate(PAGES.PLANS)}
+              style={{
+                marginTop: 28, padding: "12px 36px",
+                background: "transparent", border: "1px solid rgba(255,255,255,0.4)",
+                color: "#fff", fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                fontSize: 12, letterSpacing: 3, cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={e => { e.target.style.background = "#fff"; e.target.style.color = "#2c2418"; }}
+              onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#fff"; }}
+            >プランを見る</button>
+          </div>
+        </FadeIn>
+      </div>
+
+      {/* Info bar */}
+      <div style={{ background: "#f7f3ee", padding: "60px 20px" }}>
+        <div style={{
+          maxWidth: 900, margin: "0 auto",
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 40,
+          textAlign: "center",
+        }}>
+          {[
+            { label: "チェックイン", value: "15:00〜18:00" },
+            { label: "チェックアウト", value: "〜10:00" },
+            { label: "お電話", value: "0776-XX-XXXX" },
+            { label: "総客室数", value: "全18室" },
+          ].map((item, i) => (
+            <FadeIn key={i} delay={i * 0.1}>
+              <div>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#8b7355", marginBottom: 8,
+                }}>{item.label}</p>
+                <p style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                  color: "#2c2418", margin: 0, letterSpacing: 2,
+                }}>{item.value}</p>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== ROOMS ========================
+function RoomsPage() {
+  const mobile = useIsMobile();
+  const rooms = [
+    {
+      name: "露天風呂付き客室「月庭」",
+      nameEn: "TSUKITEI",
+      size: "和室12.5畳＋次の間6畳",
+      capacity: "2〜5名",
+      img: IMG.room1,
+      desc: "専用の露天風呂を備えた当館最上級の客室。月明かりに照らされる坪庭を眺めながら、プライベートな湯浴みをお楽しみいただけます。越前和紙の障子や九谷焼の調度品など、北陸の伝統工芸を随所にあしらいました。",
+      features: ["専用露天風呂", "坪庭ビュー", "Wi-Fi完備", "加湿空気清浄機"],
+    },
+    {
+      name: "特別室「雲居」",
+      nameEn: "KUMOI",
+      size: "和室10畳＋リビング",
+      capacity: "2〜4名",
+      img: IMG.room2,
+      desc: "和の趣とモダンな快適性を兼ね備えた特別室。ゆったりとしたリビングスペースからは、四季折々の山並みを一望できます。ご夫婦やカップルでの記念日のご旅行に最適です。",
+      features: ["マウンテンビュー", "リビング付", "Wi-Fi完備", "ミニバー"],
+    },
+    {
+      name: "和室「花筏」",
+      nameEn: "HANAIKADA",
+      size: "和室10畳",
+      capacity: "2〜4名",
+      img: IMG.room3,
+      desc: "純和風の落ち着いた佇まいの客室。窓からは日本庭園の緑をお楽しみいただけます。畳の香りに包まれて、日常を忘れるひとときをお過ごしください。リーズナブルながら上質な滞在をお約束します。",
+      features: ["庭園ビュー", "Wi-Fi完備", "加湿空気清浄機", "金庫"],
+    },
+  ];
+
+  return (
+    <div>
+      <PageHero title="客室" titleEn="ROOMS" image={IMG.room1} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <FadeIn>
+            <p style={{
+              textAlign: "center", fontFamily: "'Noto Serif JP', serif",
+              fontSize: 15, lineHeight: 2.4, color: "#4a4035", marginBottom: 60,
+            }}>
+              全18室、すべてのお部屋から四季の移ろいをお楽しみいただけます。<br />
+              北陸の伝統工芸を取り入れた、心安らぐ和の空間でお過ごしください。
+            </p>
+          </FadeIn>
+          {rooms.map((room, i) => (
+            <FadeIn key={i} delay={0.1}>
+              <div style={{
+                display: "grid", gridTemplateColumns: mobile ? "1fr" : (i % 2 === 0 ? "1.2fr 1fr" : "1fr 1.2fr"),
+                gap: 0, marginBottom: mobile ? 40 : 60, background: "#fff", borderRadius: 2, overflow: "hidden",
+                boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+              }}>
+                <div style={{ order: mobile ? 0 : (i % 2 === 0 ? 0 : 1) }}>
+                  <img src={room.img} alt="" style={{ width: "100%", height: mobile ? 220 : "100%", objectFit: "cover", minHeight: mobile ? 0 : 300 }} />
+                </div>
+                <div style={{ padding: mobile ? "24px 20px" : "40px 36px", display: "flex", flexDirection: "column", justifyContent: "center", order: mobile ? 1 : (i % 2 === 0 ? 1 : 0) }}>
+                  <p style={{
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                    letterSpacing: 4, color: "#8b7355", marginBottom: 8,
+                  }}>{room.nameEn}</p>
+                  <h3 style={{
+                    fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                    fontWeight: 400, color: "#2c2418", marginBottom: 16, letterSpacing: 2,
+                  }}>{room.name}</h3>
+                  <p style={{
+                    fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                    color: "#6b5e50", lineHeight: 2.2, marginBottom: 20,
+                  }}>{room.desc}</p>
+                  <div style={{
+                    display: "flex", gap: 16, fontSize: 12,
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif", color: "#8b7355",
+                    marginBottom: 12,
+                  }}>
+                    <span>広さ：{room.size}</span>
+                    <span>定員：{room.capacity}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {room.features.map((f, j) => (
+                      <span key={j} style={{
+                        padding: "4px 12px", background: "#f7f3ee", borderRadius: 2,
+                        fontSize: 11, fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                        color: "#6b5e50",
+                      }}>{f}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== ONSEN ========================
+function OnsenPage() {
+  const baths = [
+    {
+      name: "大浴場「雲海の湯」",
+      nameEn: "UNKAI NO YU",
+      img: IMG.onsen1,
+      desc: "開放感あふれる大浴場。大きな窓から山並みを望みながら、源泉かけ流しの湯をゆったりとお楽しみいただけます。泉質はナトリウム塩化物泉で、神経痛・筋肉痛・疲労回復に効能がございます。",
+    },
+    {
+      name: "露天風呂「月見の湯」",
+      nameEn: "TSUKIMI NO YU",
+      img: IMG.onsen2,
+      desc: "巨岩を配した野趣あふれる露天風呂。夜には満天の星空、冬には雪見風呂をお楽しみいただけます。自然の風を感じながらの湯浴みは格別のひとときです。",
+    },
+    {
+      name: "貸切風呂「花あかり」",
+      nameEn: "HANAAKARI",
+      img: IMG.onsen3,
+      desc: "ご家族やカップルでプライベートにお楽しみいただける貸切風呂。檜の香り豊かな浴槽と坪庭を備えた贅沢な空間です。ご予約制（45分・無料）でご利用いただけます。",
+    },
+  ];
+
+  return (
+    <div>
+      <PageHero title="温泉" titleEn="ONSEN" image={IMG.onsen1} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <SectionTitle ja="湯雲閣の湯" en="HOT SPRING" />
+            <p style={{
+              textAlign: "center", fontFamily: "'Noto Serif JP', serif",
+              fontSize: 15, lineHeight: 2.4, color: "#4a4035", marginBottom: 40,
+            }}>
+              地下1,200mから湧き出る自家源泉を贅沢にかけ流し。<br />
+              泉温48.3℃のナトリウム塩化物泉は「美肌の湯」としても知られ、<br />
+              湯上がりのしっとりとした肌触りをお楽しみいただけます。
+            </p>
+          </FadeIn>
+
+          {/* Onsen info box */}
+          <FadeIn>
+            <div style={{
+              background: "#2c2418", borderRadius: 2, padding: "32px 36px",
+              color: "#e8dcc8", marginBottom: 60,
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 24,
+            }}>
+              {[
+                { label: "泉質", value: "ナトリウム塩化物泉" },
+                { label: "源泉温度", value: "48.3℃" },
+                { label: "pH値", value: "7.8（弱アルカリ性）" },
+                { label: "効能", value: "神経痛・筋肉痛・冷え性・美肌" },
+                { label: "入浴時間", value: "15:00〜24:00 / 6:00〜9:30" },
+                { label: "貸切風呂", value: "予約制（45分・無料）" },
+              ].map((item, i) => (
+                <div key={i}>
+                  <p style={{
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                    fontSize: 10, letterSpacing: 3, opacity: 0.5, marginBottom: 6,
+                  }}>{item.label}</p>
+                  <p style={{
+                    fontFamily: "'Noto Serif JP', serif", fontSize: 14, margin: 0,
+                  }}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+
+          {baths.map((bath, i) => (
+            <FadeIn key={i} delay={0.1}>
+              <div style={{ marginBottom: 48 }}>
+                <div style={{ overflow: "hidden", borderRadius: 2, marginBottom: 20 }}>
+                  <img src={bath.img} alt="" style={{ width: "100%", height: 360, objectFit: "cover" }} />
+                </div>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#8b7355", marginBottom: 6,
+                }}>{bath.nameEn}</p>
+                <h3 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 12, letterSpacing: 2,
+                }}>{bath.name}</h3>
+                <p style={{
+                  fontFamily: "'Noto Serif JP', serif", fontSize: 14,
+                  color: "#6b5e50", lineHeight: 2.2,
+                }}>{bath.desc}</p>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== CUISINE ========================
+function CuisinePage() {
+  const mobile = useIsMobile();
+  return (
+    <div>
+      <PageHero title="お料理" titleEn="CUISINE" image={IMG.food1} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <SectionTitle ja="越前の美味" en="GASTRONOMY" />
+            <p style={{
+              textAlign: "center", fontFamily: "'Noto Serif JP', serif",
+              fontSize: 15, lineHeight: 2.4, color: "#4a4035", marginBottom: 60,
+            }}>
+              日本海の豊かな海の幸、越前の山の恵みを<br />
+              料理長が真心込めてお仕立ていたします。<br />
+              季節ごとに替わる会席料理で、旬の味覚をご堪能ください。
+            </p>
+          </FadeIn>
+
+          {/* Dinner */}
+          <FadeIn>
+            <div style={{
+              display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 0,
+              background: "#fff", borderRadius: 2, overflow: "hidden",
+              boxShadow: "0 2px 20px rgba(0,0,0,0.06)", marginBottom: 48,
+            }}>
+              <img src={IMG.food1} alt="" style={{ width: "100%", height: mobile ? 220 : "100%", objectFit: "cover", minHeight: mobile ? 0 : 320 }} />
+              <div style={{ padding: mobile ? "24px 20px" : "40px 36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#8b7355", marginBottom: 8,
+                }}>DINNER</p>
+                <h3 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 16, letterSpacing: 2,
+                }}>夕食 — 季節の会席</h3>
+                <p style={{
+                  fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                  color: "#6b5e50", lineHeight: 2.2, marginBottom: 20,
+                }}>
+                  先付、お椀、お造り、焼物、煮物、揚物、食事、甘味の全8品からなる本格会席料理。
+                  冬季（11月〜3月）は越前がにを使った特別会席もご用意しております。
+                </p>
+                <p style={{ fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 12, color: "#8b7355" }}>
+                  お食事処「山翠」にて 18:00〜20:30（最終入店）
+                </p>
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* Breakfast */}
+          <FadeIn>
+            <div style={{
+              display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 0,
+              background: "#fff", borderRadius: 2, overflow: "hidden",
+              boxShadow: "0 2px 20px rgba(0,0,0,0.06)", marginBottom: 48,
+            }}>
+              <div style={{ padding: mobile ? "24px 20px" : "40px 36px", display: "flex", flexDirection: "column", justifyContent: "center", order: mobile ? 1 : 0 }}>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#8b7355", marginBottom: 8,
+                }}>BREAKFAST</p>
+                <h3 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 16, letterSpacing: 2,
+                }}>朝食 — 和朝食膳</h3>
+                <p style={{
+                  fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                  color: "#6b5e50", lineHeight: 2.2, marginBottom: 20,
+                }}>
+                  炊きたてのコシヒカリに、地元の干物、自家製豆腐、季節の小鉢を添えた和朝食。
+                  福井名物の「へしこ」もお楽しみいただけます。
+                </p>
+                <p style={{ fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 12, color: "#8b7355" }}>
+                  お食事処「山翠」にて 7:30〜9:30（最終入店）
+                </p>
+              </div>
+              <img src={IMG.food2} alt="" style={{ width: "100%", height: mobile ? 220 : "100%", objectFit: "cover", minHeight: mobile ? 0 : 320, order: mobile ? 0 : 1 }} />
+            </div>
+          </FadeIn>
+
+          {/* Special items */}
+          <FadeIn>
+            <SectionTitle ja="名物料理" en="SPECIALTIES" />
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24,
+            }}>
+              {[
+                { name: "越前がに懐石", season: "11月〜3月", desc: "水揚げされたばかりの越前がにを、刺身・焼き・鍋で贅沢にお楽しみいただけます。", img: IMG.food3 },
+                { name: "若狭ぐじの塩焼き", season: "通年", desc: "脂ののった若狭ぐじを、炭火でじっくり焼き上げた逸品。", img: IMG.food1 },
+                { name: "越前おろしそば", season: "通年", desc: "福井名物のおろしそば。地元の石臼挽きそば粉を使用した自家製麺。", img: IMG.food2 },
+              ].map((item, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 2, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
+                  <img src={item.img} alt="" style={{ width: "100%", height: 180, objectFit: "cover" }} />
+                  <div style={{ padding: "20px 20px 24px" }}>
+                    <h4 style={{
+                      fontFamily: "'Shippori Mincho', serif", fontSize: 17, fontWeight: 400,
+                      color: "#2c2418", marginBottom: 6, letterSpacing: 1,
+                    }}>{item.name}</h4>
+                    <p style={{
+                      fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11,
+                      color: "#8b7355", marginBottom: 10,
+                    }}>旬：{item.season}</p>
+                    <p style={{
+                      fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                      color: "#6b5e50", lineHeight: 2, margin: 0,
+                    }}>{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== PLANS ========================
+function PlansPage() {
+  const plans = [
+    {
+      name: "スタンダードプラン",
+      nameEn: "STANDARD",
+      price: "22,000",
+      room: "和室「花筏」",
+      desc: "季節の会席料理と源泉かけ流しの温泉を満喫する、当館の基本プランです。",
+      includes: ["季節の会席料理（夕食）", "和朝食膳（朝食）", "大浴場・露天風呂利用", "浴衣・タオル", "Wi-Fi"],
+      accent: "#8b7355",
+    },
+    {
+      name: "特別室プラン",
+      nameEn: "PREMIUM",
+      price: "35,000",
+      room: "特別室「雲居」",
+      desc: "ワンランク上の客室と料理長特選の会席をお楽しみいただけるプレミアムプランです。",
+      includes: ["料理長特選会席（夕食）", "和朝食膳（朝食）", "大浴場・露天風呂利用", "貸切風呂1回（45分）", "ウェルカムドリンク", "レイトチェックアウト11:00"],
+      accent: "#6b5240",
+    },
+    {
+      name: "露天風呂付き客室プラン",
+      nameEn: "SUITE",
+      price: "48,000",
+      room: "露天風呂付き客室「月庭」",
+      desc: "当館最上級の客室と、最高の食材を使った特別会席で極上のひとときを。記念日にもおすすめです。",
+      includes: ["特別会席（夕食）", "和朝食膳（朝食）", "客室専用露天風呂", "大浴場・露天風呂利用", "シャンパンボトル1本", "記念日演出（要相談）", "レイトチェックアウト11:00"],
+      accent: "#4a3628",
+    },
+  ];
+
+  return (
+    <div>
+      <PageHero title="料金・プラン" titleEn="PLANS" image={IMG.garden} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <FadeIn>
+            <p style={{
+              textAlign: "center", fontFamily: "'Noto Serif JP', serif",
+              fontSize: 14, color: "#6b5e50", lineHeight: 2.2, marginBottom: 60,
+            }}>
+              表示料金はお一人様あたり（税込・サービス料込）です。<br />
+              2名様1室ご利用時の1泊2食付き料金となります。
+            </p>
+          </FadeIn>
+
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24,
+          }}>
+            {plans.map((plan, i) => (
+              <FadeIn key={i} delay={i * 0.12}>
+                <div style={{
+                  background: "#fff", borderRadius: 2, overflow: "hidden",
+                  boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+                  borderTop: `3px solid ${plan.accent}`,
+                  display: "flex", flexDirection: "column", height: "100%",
+                }}>
+                  <div style={{ padding: "32px 28px", flex: 1 }}>
+                    <p style={{
+                      fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                      letterSpacing: 4, color: "#8b7355", marginBottom: 6,
+                    }}>{plan.nameEn}</p>
+                    <h3 style={{
+                      fontFamily: "'Shippori Mincho', serif", fontSize: 20,
+                      fontWeight: 400, color: "#2c2418", marginBottom: 16, letterSpacing: 2,
+                    }}>{plan.name}</h3>
+                    <p style={{
+                      fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                      color: "#6b5e50", lineHeight: 2, marginBottom: 20,
+                    }}>{plan.desc}</p>
+                    <p style={{
+                      fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 12,
+                      color: "#8b7355", marginBottom: 16,
+                    }}>客室：{plan.room}</p>
+                    <div style={{
+                      borderTop: "1px solid #eee8de", paddingTop: 16,
+                    }}>
+                      {plan.includes.map((item, j) => (
+                        <div key={j} style={{
+                          fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                          color: "#6b5e50", lineHeight: 1.6, paddingLeft: 16,
+                          position: "relative", marginBottom: 6,
+                        }}>
+                          <span style={{
+                            position: "absolute", left: 0, color: "#c4a87c",
+                          }}>◆</span>
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{
+                    background: plan.accent, padding: "20px 28px",
+                    textAlign: "center",
+                  }}>
+                    <span style={{
+                      fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 12,
+                      color: "rgba(255,255,255,0.6)",
+                    }}>お一人様 </span>
+                    <span style={{
+                      fontFamily: "'Shippori Mincho', serif", fontSize: 28,
+                      color: "#fff", letterSpacing: 2,
+                    }}>¥{plan.price}</span>
+                    <span style={{
+                      fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 12,
+                      color: "rgba(255,255,255,0.6)",
+                    }}>〜（税込）</span>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          <FadeIn>
+            <div style={{
+              background: "#fff", borderRadius: 2, padding: "28px 32px", marginTop: 40,
+              boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+            }}>
+              <h4 style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 16, fontWeight: 400,
+                color: "#2c2418", marginBottom: 12,
+              }}>ご予約について</h4>
+              <p style={{
+                fontFamily: "'Noto Serif JP', serif", fontSize: 13, color: "#6b5e50", lineHeight: 2.2,
+              }}>
+                ご予約はお電話（0776-XX-XXXX）または公式ウェブサイトにて承っております。
+                繁忙期（GW・お盆・年末年始）は早めのご予約をおすすめいたします。
+                キャンセル料は3日前から発生いたします（3日前30%、前日50%、当日100%）。
+              </p>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== ACCESS ========================
+function AccessPage() {
+  return (
+    <div>
+      <PageHero title="アクセス" titleEn="ACCESS" image={IMG.exterior} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <SectionTitle ja="交通のご案内" en="DIRECTIONS" />
+          </FadeIn>
+
+          {/* Map placeholder */}
+          <FadeIn>
+            <div style={{
+              background: "#d5cec3", borderRadius: 2, height: 300,
+              display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 48,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{
+                position: "absolute", inset: 0, opacity: 0.1,
+                backgroundImage: "repeating-linear-gradient(0deg, #000 0px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, #000 0px, transparent 1px, transparent 40px)",
+              }} />
+              <div style={{ textAlign: "center", position: "relative" }}>
+                <p style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 18,
+                  color: "#4a4035", marginBottom: 8,
+                }}>📍 湯雲閣</p>
+                <p style={{
+                  fontFamily: "'Noto Serif JP', serif", fontSize: 13, color: "#6b5e50",
+                }}>〒910-4XXX 福井県あわら市温泉X丁目X-X</p>
+              </div>
+            </div>
+          </FadeIn>
+
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, marginBottom: 48,
+          }}>
+            {[
+              {
+                method: "電車でお越しの場合",
+                icon: "🚃",
+                steps: [
+                  "JR北陸新幹線「芦原温泉駅」下車",
+                  "芦原温泉駅より無料送迎バスで約15分",
+                  "（送迎バスは要事前予約）",
+                ],
+              },
+              {
+                method: "お車でお越しの場合",
+                icon: "🚗",
+                steps: [
+                  "北陸自動車道「金津IC」より約20分",
+                  "駐車場：30台（無料）",
+                  "カーナビ：「湯雲閣」または住所で検索",
+                ],
+              },
+              {
+                method: "飛行機でお越しの場合",
+                icon: "✈️",
+                steps: [
+                  "小松空港よりリムジンバスで約60分",
+                  "または小松空港→JR小松駅→芦原温泉駅",
+                  "空港からのタクシーも手配可能（要相談）",
+                ],
+              },
+            ].map((item, i) => (
+              <FadeIn key={i} delay={i * 0.1}>
+                <div style={{
+                  background: "#fff", borderRadius: 2, padding: "28px 24px",
+                  boxShadow: "0 2px 20px rgba(0,0,0,0.06)", height: "100%",
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>
+                  <h4 style={{
+                    fontFamily: "'Shippori Mincho', serif", fontSize: 16,
+                    fontWeight: 400, color: "#2c2418", marginBottom: 16,
+                  }}>{item.method}</h4>
+                  {item.steps.map((step, j) => (
+                    <p key={j} style={{
+                      fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                      color: "#6b5e50", lineHeight: 2, margin: 0,
+                    }}>{step}</p>
+                  ))}
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          <FadeIn>
+            <div style={{
+              background: "#2c2418", borderRadius: 2, padding: "28px 32px", color: "#e8dcc8",
+            }}>
+              <h4 style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 16,
+                fontWeight: 400, marginBottom: 12,
+              }}>無料送迎のご案内</h4>
+              <p style={{
+                fontFamily: "'Noto Serif JP', serif", fontSize: 13, lineHeight: 2.2, opacity: 0.8,
+              }}>
+                JR芦原温泉駅からの無料送迎を行っております。ご利用の際は前日までにお電話にてご予約ください。
+                送迎時間は14:00〜17:00の間でご希望に合わせて運行いたします。
+                帰りの送迎は9:30と10:30の2便がございます。
+              </p>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== FAQ ========================
+function FAQPage() {
+  const [openIdx, setOpenIdx] = useState(null);
+
+  const faqs = [
+    { q: "チェックイン・チェックアウトの時間は？", a: "チェックインは15:00〜18:00、チェックアウトは10:00でございます。プレミアムプラン・スイートプランをご利用のお客様は11:00までのレイトチェックアウトが可能です。18:00以降のチェックインをご希望の場合は、事前にお電話にてお知らせください。" },
+    { q: "送迎はありますか？", a: "はい、JR芦原温泉駅から無料送迎を行っております。送迎時間は14:00〜17:00の間で、前日までの事前予約制となります。帰りは9:30と10:30の2便がございます。お電話（0776-XX-XXXX）にてご予約ください。" },
+    { q: "駐車場はありますか？", a: "はい、無料駐車場を30台分ご用意しております。大型車（マイクロバス等）をご利用の場合は、事前にご連絡いただけますようお願いいたします。" },
+    { q: "子供も宿泊できますか？", a: "はい、お子様も大歓迎です。小学生のお子様は大人料金の70%、幼児（食事・布団あり）は50%、幼児（食事・布団なし）は無料でございます。お子様用の浴衣、歯ブラシなどのアメニティもご用意しております。お子様用の食事は和食のお子様ランチとなります。" },
+    { q: "アレルギー対応はしてもらえますか？", a: "はい、食物アレルギーをお持ちのお客様には、可能な限り対応させていただきます。ご予約時またはご宿泊3日前までにお電話にてお知らせください。アレルギーの種類や程度によっては対応が難しい場合もございますので、まずはお気軽にご相談ください。" },
+    { q: "日帰り入浴はできますか？", a: "はい、日帰り入浴を承っております。ご利用時間は11:00〜15:00で、料金は大人1,200円、小学生600円でございます。タオルの販売（300円）もございます。混雑状況によってはお待ちいただく場合がございますので、事前のお電話をおすすめいたします。" },
+    { q: "貸切風呂の予約方法は？", a: "貸切風呂「花あかり」は、チェックイン時にフロントにてご予約を承っております。ご利用時間は45分間で、空きがあれば無料でご利用いただけます。1組様1回までのご利用となりますのでご了承ください。" },
+    { q: "Wi-Fiはありますか？", a: "はい、全館・全客室でWi-Fiを無料でご利用いただけます。フロントにてパスワードをお伝えしております。動画視聴なども快適にご利用いただける通信速度を確保しております。" },
+    { q: "キャンセル料はかかりますか？", a: "キャンセル料は以下の通りです。3日前：宿泊料の30%、前日：宿泊料の50%、当日：宿泊料の100%、無連絡キャンセル：宿泊料の100%。台風等の自然災害によるキャンセルについては、状況に応じて個別に対応させていただきます。" },
+    { q: "クレジットカードは使えますか？", a: "はい、VISA、Mastercard、JCB、American Express、Diners Clubのクレジットカードをご利用いただけます。また、PayPay、楽天ペイ等のQRコード決済にも対応しております。" },
+    { q: "禁煙・喫煙について教えてください。", a: "当館は全室禁煙でございます。おタバコは1階ロビー横の喫煙スペースにてお願いしております。電子タバコも客室内でのご利用はご遠慮いただいております。" },
+    { q: "ペットは一緒に泊まれますか？", a: "申し訳ございませんが、ペットのご同伴はお断りしております。ご了承ください。近隣のペットホテルをご紹介することは可能ですので、お気軽にお問い合わせください。" },
+    { q: "バリアフリー対応はしていますか？", a: "1階にバリアフリー対応客室を1室ご用意しております。大浴場にも手すりを設置しておりますが、露天風呂は段差がございますのでご了承ください。車椅子の貸し出しも行っておりますので、ご予約時にお申し付けください。" },
+    { q: "周辺の観光スポットを教えてください。", a: "東尋坊（車で約20分）、永平寺（車で約40分）、丸岡城（車で約25分）、芝政ワールド（車で約15分）、越前松島水族館（車で約20分）など、多くの観光スポットがございます。フロントにて観光マップや割引券をご用意しておりますので、お気軽にお声がけください。" },
+  ];
+
+  return (
+    <div>
+      <PageHero title="よくあるご質問" titleEn="FAQ" image={IMG.garden} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <FadeIn>
+            <p style={{
+              textAlign: "center", fontFamily: "'Noto Serif JP', serif",
+              fontSize: 14, color: "#6b5e50", lineHeight: 2.2, marginBottom: 48,
+            }}>
+              お客様からよくいただくご質問をまとめました。<br />
+              こちらに掲載のないご質問は、お電話にてお気軽にお問い合わせください。
+            </p>
+          </FadeIn>
+
+          <div>
+            {faqs.map((faq, i) => (
+              <FadeIn key={i} delay={Math.min(i * 0.05, 0.5)}>
+                <div style={{
+                  marginBottom: 8, borderRadius: 2, overflow: "hidden",
+                  background: "#fff", boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
+                }}>
+                  <button
+                    onClick={() => setOpenIdx(openIdx === i ? null : i)}
+                    style={{
+                      width: "100%", padding: "20px 24px",
+                      background: "transparent", border: "none",
+                      cursor: "pointer", textAlign: "left",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      gap: 16,
+                    }}
+                  >
+                    <span style={{
+                      fontFamily: "'Noto Serif JP', serif", fontSize: 14,
+                      color: "#2c2418", lineHeight: 1.8,
+                    }}>
+                      <span style={{ color: "#c4a87c", marginRight: 12 }}>Q.</span>
+                      {faq.q}
+                    </span>
+                    <span style={{
+                      fontSize: 18, color: "#8b7355", flexShrink: 0,
+                      transform: openIdx === i ? "rotate(45deg)" : "rotate(0deg)",
+                      transition: "transform 0.3s ease",
+                    }}>+</span>
+                  </button>
+                  <div style={{
+                    maxHeight: openIdx === i ? 400 : 0,
+                    overflow: "hidden",
+                    transition: "max-height 0.4s ease",
+                  }}>
+                    <div style={{
+                      padding: "0 24px 20px 48px",
+                    }}>
+                      <p style={{
+                        fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                        color: "#6b5e50", lineHeight: 2.2, margin: 0,
+                      }}>
+                        <span style={{ color: "#c4a87c", fontWeight: 600 }}>A. </span>
+                        {faq.a}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          <FadeIn>
+            <div style={{
+              textAlign: "center", marginTop: 48, padding: "32px",
+              background: "#2c2418", borderRadius: 2, color: "#e8dcc8",
+            }}>
+              <p style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 18,
+                marginBottom: 12, letterSpacing: 2,
+              }}>お問い合わせ</p>
+              <p style={{
+                fontFamily: "'Noto Serif JP', serif", fontSize: 13, opacity: 0.7,
+                lineHeight: 2, marginBottom: 16,
+              }}>
+                上記以外のご質問やご要望がございましたら、<br />お気軽にお電話ください。
+              </p>
+              <p style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 24, letterSpacing: 3,
+              }}>0776-XX-XXXX</p>
+              <p style={{
+                fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11, opacity: 0.5, marginTop: 8,
+              }}>受付時間 8:00〜21:00</p>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== RESERVE ========================
+function ReservePage() {
+  const mobile = useIsMobile();
+  const [form, setForm] = useState({
+    plan: "standard",
+    checkin: "",
+    checkout: "",
+    guests: "2",
+    rooms: "1",
+    name: "",
+    kana: "",
+    email: "",
+    phone: "",
+    requests: "",
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const update = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  const planOptions = [
+    { value: "standard", label: "スタンダードプラン（¥22,000〜/名）" },
+    { value: "premium", label: "特別室プラン（¥35,000〜/名）" },
+    { value: "suite", label: "露天風呂付き客室プラン（¥48,000〜/名）" },
+  ];
+
+  const inputStyle = {
+    width: "100%", padding: "12px 14px", border: "1px solid #d5cec3",
+    borderRadius: 2, fontFamily: "'Noto Serif JP', serif", fontSize: 14,
+    color: "#2c2418", background: "#fff", outline: "none",
+    transition: "border-color 0.3s ease",
+  };
+
+  const labelStyle = {
+    fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 12,
+    color: "#8b7355", letterSpacing: 1, marginBottom: 6, display: "block",
+  };
+
+  const requiredBadge = {
+    display: "inline-block", background: "#c4a87c", color: "#fff",
+    fontSize: 9, padding: "2px 6px", borderRadius: 2, marginLeft: 8,
+    verticalAlign: "middle", letterSpacing: 1,
+  };
+
+  if (submitted) {
+    return (
+      <div>
+        <PageHero title="ご予約" titleEn="RESERVATION" image={IMG.garden} />
+        <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+          <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+            <FadeIn>
+              <div style={{
+                background: "#fff", borderRadius: 2, padding: mobile ? "40px 24px" : "60px 48px",
+                boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+              }}>
+                <div style={{ fontSize: 48, marginBottom: 20 }}>✓</div>
+                <h2 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 24,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 16, letterSpacing: 3,
+                }}>ご予約を承りました</h2>
+                <p style={{
+                  fontFamily: "'Noto Serif JP', serif", fontSize: 14,
+                  color: "#6b5e50", lineHeight: 2.2, marginBottom: 8,
+                }}>
+                  お申し込みいただきありがとうございます。<br />
+                  確認メールをお送りいたしましたので、ご確認ください。<br />
+                  ※これはデモサイトのため、実際の予約は行われません。
+                </p>
+                <div style={{
+                  marginTop: 32, padding: "20px 24px", background: "#f7f3ee",
+                  borderRadius: 2, textAlign: "left",
+                }}>
+                  <p style={{ fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10, letterSpacing: 3, color: "#8b7355", marginBottom: 12 }}>ご予約内容</p>
+                  {[
+                    { label: "プラン", value: planOptions.find(p => p.value === form.plan)?.label },
+                    { label: "チェックイン", value: form.checkin || "未選択" },
+                    { label: "チェックアウト", value: form.checkout || "未選択" },
+                    { label: "宿泊人数", value: `${form.guests}名` },
+                    { label: "客室数", value: `${form.rooms}室` },
+                    { label: "お名前", value: form.name || "未入力" },
+                    { label: "メール", value: form.email || "未入力" },
+                  ].map((item, i) => (
+                    <div key={i} style={{
+                      display: "flex", justifyContent: "space-between",
+                      padding: "6px 0", borderBottom: "1px solid #eee8de",
+                      fontFamily: "'Noto Serif JP', serif", fontSize: 13, color: "#4a4035",
+                    }}>
+                      <span style={{ color: "#8b7355" }}>{item.label}</span>
+                      <span>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => { setSubmitted(false); setForm({ plan: "standard", checkin: "", checkout: "", guests: "2", rooms: "1", name: "", kana: "", email: "", phone: "", requests: "" }); }}
+                  style={{
+                    marginTop: 28, padding: "12px 36px",
+                    background: "#2c2418", border: "none",
+                    color: "#e8dcc8", fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                    fontSize: 12, letterSpacing: 3, cursor: "pointer",
+                    borderRadius: 2, transition: "opacity 0.3s ease",
+                  }}
+                  onMouseEnter={e => e.target.style.opacity = "0.8"}
+                  onMouseLeave={e => e.target.style.opacity = "1"}
+                >新しいご予約</button>
+              </div>
+            </FadeIn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHero title="ご予約" titleEn="RESERVATION" image={IMG.garden} />
+      <div style={{ background: "#f7f3ee", padding: "80px 20px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <FadeIn>
+            <p style={{
+              textAlign: "center", fontFamily: "'Noto Serif JP', serif",
+              fontSize: 14, color: "#6b5e50", lineHeight: 2.2, marginBottom: 48,
+            }}>
+              下記フォームよりご予約いただけます。<br />
+              ※こちらはデモサイトです。実際の予約は行われません。
+            </p>
+          </FadeIn>
+
+          <FadeIn>
+            <div style={{
+              background: "#fff", borderRadius: 2, overflow: "hidden",
+              boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+            }}>
+              {/* Step 1: Plan & Date */}
+              <div style={{
+                padding: mobile ? "28px 20px" : "36px 40px",
+                borderBottom: "1px solid #eee8de",
+              }}>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#c4a87c", marginBottom: 6,
+                }}>STEP 1</p>
+                <h3 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 18,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 24, letterSpacing: 2,
+                }}>プラン・日程の選択</h3>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={labelStyle}>ご希望プラン<span style={requiredBadge}>必須</span></label>
+                  <select
+                    value={form.plan}
+                    onChange={e => update("plan", e.target.value)}
+                    style={{ ...inputStyle, cursor: "pointer" }}
+                  >
+                    {planOptions.map(p => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{
+                  display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 16,
+                  marginBottom: 20,
+                }}>
+                  <div>
+                    <label style={labelStyle}>チェックイン<span style={requiredBadge}>必須</span></label>
+                    <input
+                      type="date" value={form.checkin}
+                      onChange={e => update("checkin", e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>チェックアウト<span style={requiredBadge}>必須</span></label>
+                    <input
+                      type="date" value={form.checkout}
+                      onChange={e => update("checkout", e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+
+                <div style={{
+                  display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 16,
+                }}>
+                  <div>
+                    <label style={labelStyle}>宿泊人数<span style={requiredBadge}>必須</span></label>
+                    <select value={form.guests} onChange={e => update("guests", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                      {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}名</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>客室数</label>
+                    <select value={form.rooms} onChange={e => update("rooms", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                      {[1,2,3].map(n => <option key={n} value={n}>{n}室</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Guest Info */}
+              <div style={{
+                padding: mobile ? "28px 20px" : "36px 40px",
+                borderBottom: "1px solid #eee8de",
+              }}>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#c4a87c", marginBottom: 6,
+                }}>STEP 2</p>
+                <h3 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 18,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 24, letterSpacing: 2,
+                }}>お客様情報</h3>
+
+                <div style={{
+                  display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 16,
+                  marginBottom: 16,
+                }}>
+                  <div>
+                    <label style={labelStyle}>お名前（漢字）<span style={requiredBadge}>必須</span></label>
+                    <input
+                      type="text" value={form.name} placeholder="例：湯雲 太郎"
+                      onChange={e => update("name", e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>フリガナ<span style={requiredBadge}>必須</span></label>
+                    <input
+                      type="text" value={form.kana} placeholder="例：ユウン タロウ"
+                      onChange={e => update("kana", e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+
+                <div style={{
+                  display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 16,
+                }}>
+                  <div>
+                    <label style={labelStyle}>メールアドレス<span style={requiredBadge}>必須</span></label>
+                    <input
+                      type="email" value={form.email} placeholder="example@mail.com"
+                      onChange={e => update("email", e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>電話番号<span style={requiredBadge}>必須</span></label>
+                    <input
+                      type="tel" value={form.phone} placeholder="090-XXXX-XXXX"
+                      onChange={e => update("phone", e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Requests */}
+              <div style={{
+                padding: mobile ? "28px 20px" : "36px 40px",
+                borderBottom: "1px solid #eee8de",
+              }}>
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                  letterSpacing: 4, color: "#c4a87c", marginBottom: 6,
+                }}>STEP 3</p>
+                <h3 style={{
+                  fontFamily: "'Shippori Mincho', serif", fontSize: 18,
+                  fontWeight: 400, color: "#2c2418", marginBottom: 24, letterSpacing: 2,
+                }}>ご要望・備考</h3>
+
+                <div>
+                  <label style={labelStyle}>ご要望がございましたらご記入ください</label>
+                  <textarea
+                    value={form.requests}
+                    onChange={e => update("requests", e.target.value)}
+                    placeholder="食物アレルギー、記念日のご要望、お子様の年齢など"
+                    rows={4}
+                    style={{ ...inputStyle, resize: "vertical" }}
+                  />
+                </div>
+              </div>
+
+              {/* Confirmation note & Submit */}
+              <div style={{
+                padding: mobile ? "28px 20px" : "36px 40px",
+                textAlign: "center",
+              }}>
+                <div style={{
+                  background: "#f7f3ee", borderRadius: 2, padding: "16px 20px",
+                  marginBottom: 24,
+                }}>
+                  <p style={{
+                    fontFamily: "'Noto Serif JP', serif", fontSize: 12,
+                    color: "#6b5e50", lineHeight: 2,
+                  }}>
+                    キャンセル料：3日前 30% ／ 前日 50% ／ 当日 100%<br />
+                    ご予約確認メールをお送りいたします。届かない場合はお電話ください。
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSubmitted(true)}
+                  style={{
+                    padding: "16px 60px", background: "#2c2418", border: "none",
+                    color: "#e8dcc8", fontFamily: "'Shippori Mincho', serif",
+                    fontSize: 16, letterSpacing: 4, cursor: "pointer",
+                    borderRadius: 2, transition: "all 0.3s ease",
+                  }}
+                  onMouseEnter={e => { e.target.style.background = "#c4a87c"; e.target.style.color = "#fff"; }}
+                  onMouseLeave={e => { e.target.style.background = "#2c2418"; e.target.style.color = "#e8dcc8"; }}
+                >予約を確定する</button>
+
+                <p style={{
+                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11,
+                  color: "#8b7355", marginTop: 16, opacity: 0.7,
+                }}>※デモサイトのため、実際の予約処理は行われません</p>
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* Phone reservation */}
+          <FadeIn>
+            <div style={{
+              textAlign: "center", marginTop: 40, padding: "28px",
+              background: "#2c2418", borderRadius: 2, color: "#e8dcc8",
+            }}>
+              <p style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 16,
+                marginBottom: 8, letterSpacing: 2,
+              }}>お電話でのご予約</p>
+              <p style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 24, letterSpacing: 3,
+                marginBottom: 8,
+              }}>0776-XX-XXXX</p>
+              <p style={{
+                fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11, opacity: 0.5,
+              }}>受付時間 9:00〜20:00</p>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== MAIN APP ========================
+function App() {
+  const [page, setPage] = useState(PAGES.HOME);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const contentRef = useRef(null);
+  const mobile = useIsMobile();
+
+  const navigate = (p) => {
+    setPage(p);
+    setMenuOpen(false);
+    if (contentRef.current) contentRef.current.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  const handleScroll = (e) => {
+    setScrolled(e.target.scrollTop > 50);
+  };
+
+  const headerBg = page === PAGES.HOME && !scrolled && !menuOpen
+    ? "transparent"
+    : "rgba(44,36,24,0.97)";
+
+  return (
+    <div style={{ width: "100%", height: "100vh", overflow: "hidden", background: "#f7f3ee" }}>
+      <style>{FONTS_CSS}{`
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f7f3ee; }
+        ::-webkit-scrollbar-thumb { background: #c4a87c; border-radius: 3px; }
+      `}</style>
+
+      {/* Header */}
+      <header style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        background: headerBg,
+        backdropFilter: "blur(12px)",
+        transition: "background 0.4s ease",
+        borderBottom: scrolled || page !== PAGES.HOME || menuOpen ? "1px solid rgba(196,168,124,0.15)" : "none",
+      }}>
+        <div style={{
+          maxWidth: 1200, margin: "0 auto", padding: "0 20px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          height: 60,
+        }}>
+          <div
+            onClick={() => navigate(PAGES.HOME)}
+            style={{ cursor: "pointer", display: "flex", alignItems: "baseline", gap: 8 }}
+          >
+            <span style={{
+              fontFamily: "'Shippori Mincho', serif", fontSize: mobile ? 20 : 22,
+              color: "#fff", letterSpacing: 4,
+            }}>湯雲閣</span>
+            {!mobile && (
+              <span style={{
+                fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 9,
+                color: "rgba(255,255,255,0.4)", letterSpacing: 2,
+              }}>YUUNKAKU</span>
+            )}
+          </div>
+
+          {/* Desktop nav */}
+          {!mobile && (
+            <nav style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              {NAV_ITEMS.filter(n => n.id !== PAGES.HOME).map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.id)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: "8px 12px",
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                    fontSize: 11, letterSpacing: 2,
+                    color: page === item.id ? "#c4a87c" : "rgba(255,255,255,0.7)",
+                    transition: "color 0.3s ease",
+                  }}
+                >{item.label}</button>
+              ))}
+            </nav>
+          )}
+
+          {/* Hamburger button */}
+          {mobile && (
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: 8, display: "flex", flexDirection: "column",
+                gap: menuOpen ? 0 : 5, alignItems: "center", justifyContent: "center",
+                width: 36, height: 36, position: "relative",
+              }}
+            >
+              <span style={{
+                display: "block", width: 20, height: 1.5, background: "#fff", borderRadius: 1,
+                transition: "all 0.3s ease",
+                transform: menuOpen ? "rotate(45deg) translateY(0)" : "none",
+                position: menuOpen ? "absolute" : "relative",
+              }} />
+              {!menuOpen && <span style={{
+                display: "block", width: 20, height: 1.5, background: "#fff", borderRadius: 1,
+              }} />}
+              <span style={{
+                display: "block", width: 20, height: 1.5, background: "#fff", borderRadius: 1,
+                transition: "all 0.3s ease",
+                transform: menuOpen ? "rotate(-45deg) translateY(0)" : "none",
+                position: menuOpen ? "absolute" : "relative",
+              }} />
+            </button>
+          )}
+        </div>
+
+        {/* Mobile menu */}
+        {mobile && (
+          <div style={{
+            maxHeight: menuOpen ? 420 : 0, overflow: "hidden",
+            transition: "max-height 0.4s ease",
+            background: "rgba(44,36,24,0.97)",
+          }}>
+            <div style={{ padding: "8px 20px 24px", display: "flex", flexDirection: "column", gap: 2 }}>
+              {NAV_ITEMS.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.id)}
+                  style={{
+                    background: page === item.id ? "rgba(196,168,124,0.1)" : "none",
+                    border: "none", cursor: "pointer", textAlign: "left",
+                    padding: "14px 12px", borderRadius: 4,
+                    fontFamily: "'Noto Serif JP', serif", fontSize: 14, letterSpacing: 2,
+                    color: page === item.id ? "#c4a87c" : "rgba(255,255,255,0.7)",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                  }}
+                >
+                  <span>{item.label}</span>
+                  <span style={{
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 9,
+                    opacity: 0.4, letterSpacing: 1,
+                  }}>{item.labelEn}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Content */}
+      <div
+        ref={contentRef}
+        onScroll={handleScroll}
+        style={{ height: "100vh", overflowY: "auto", overflowX: "hidden" }}
+      >
+        {page === PAGES.HOME && <HomePage navigate={navigate} />}
+        {page === PAGES.ROOMS && <RoomsPage />}
+        {page === PAGES.ONSEN && <OnsenPage />}
+        {page === PAGES.CUISINE && <CuisinePage />}
+        {page === PAGES.PLANS && <PlansPage />}
+        {page === PAGES.ACCESS && <AccessPage />}
+        {page === PAGES.FAQ && <FAQPage />}
+        {page === PAGES.RESERVE && <ReservePage />}
+
+        {/* Footer */}
+        <footer style={{
+          background: "#1a1610", padding: "60px 20px 32px", color: "#e8dcc8",
+        }}>
+          <div style={{
+            maxWidth: 900, margin: "0 auto",
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 40, marginBottom: 40,
+          }}>
+            <div>
+              <h3 style={{
+                fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                letterSpacing: 4, marginBottom: 12,
+              }}>湯雲閣</h3>
+              <p style={{
+                fontFamily: "'Noto Serif JP', serif", fontSize: 12,
+                lineHeight: 2.2, opacity: 0.5,
+              }}>
+                〒910-4XXX<br />
+                福井県あわら市温泉X丁目X-X<br />
+                TEL: 0776-XX-XXXX
+              </p>
+            </div>
+            <div>
+              <p style={{
+                fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                letterSpacing: 3, opacity: 0.4, marginBottom: 16,
+              }}>PAGES</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {NAV_ITEMS.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => navigate(item.id)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      textAlign: "left", padding: 0,
+                      fontFamily: "'Noto Serif JP', serif", fontSize: 13,
+                      color: "rgba(232,220,200,0.5)",
+                      transition: "color 0.3s ease",
+                    }}
+                    onMouseEnter={e => e.target.style.color = "#c4a87c"}
+                    onMouseLeave={e => e.target.style.color = "rgba(232,220,200,0.5)"}
+                  >{item.label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p style={{
+                fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+                letterSpacing: 3, opacity: 0.4, marginBottom: 16,
+              }}>INFORMATION</p>
+              <p style={{
+                fontFamily: "'Noto Serif JP', serif", fontSize: 12,
+                lineHeight: 2.4, opacity: 0.5,
+              }}>
+                チェックイン 15:00〜18:00<br />
+                チェックアウト 〜10:00<br />
+                駐車場 30台（無料）<br />
+                全館Wi-Fi完備
+              </p>
+            </div>
+          </div>
+          <div style={{
+            borderTop: "1px solid rgba(196,168,124,0.1)",
+            paddingTop: 24, textAlign: "center",
+          }}>
+            <p style={{
+              fontFamily: "'Zen Kaku Gothic New', sans-serif",
+              fontSize: 10, letterSpacing: 2, opacity: 0.3,
+            }}>© 2024 湯雲閣 YUUNKAKU. All Rights Reserved. ※このサイトは架空の旅館のデモサイトです。</p>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
