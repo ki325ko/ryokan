@@ -154,6 +154,7 @@ function PageHero({ title, titleEn, image }) {
 // ======================== HOME ========================
 function HomePage({ navigate }) {
   const [heroIdx, setHeroIdx] = useState(0);
+  const mobile = useIsMobile();
   const heroes = [IMG.hero, IMG.hero2, IMG.exterior];
   useEffect(() => {
     const t = setInterval(() => setHeroIdx(i => (i + 1) % heroes.length), 5000);
@@ -174,8 +175,37 @@ function HomePage({ navigate }) {
         ))}
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%)",
         }} />
+        {!mobile && (
+          <div style={{
+            position: "absolute", left: 44, top: "50%", transform: "translateY(-50%)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+            opacity: 0.45, zIndex: 2,
+          }}>
+            <div style={{ width: 1, height: 72, background: "#c4a87c" }} />
+            <p style={{
+              fontFamily: "'Zen Kaku Gothic New', sans-serif",
+              fontSize: 9, letterSpacing: 5, color: "#e8dcc8",
+              writingMode: "vertical-rl",
+            }}>EST. 1899</p>
+            <div style={{ width: 1, height: 72, background: "#c4a87c" }} />
+          </div>
+        )}
+        <div style={{
+          position: "absolute", bottom: 36, left: "50%", transform: "translateX(-50%)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+          opacity: 0.4, zIndex: 2,
+        }}>
+          <p style={{
+            fontFamily: "'Zen Kaku Gothic New', sans-serif",
+            fontSize: 9, letterSpacing: 5, color: "#fff",
+          }}>SCROLL</p>
+          <div style={{
+            width: 1, height: 44,
+            background: "linear-gradient(to bottom, #fff, transparent)",
+          }} />
+        </div>
         <div style={{
           position: "relative", height: "100%",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -231,6 +261,39 @@ function HomePage({ navigate }) {
         </FadeIn>
       </div>
 
+      {/* Philosophy */}
+      <div style={{ background: "#fff", padding: "100px 20px", position: "relative", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", right: "-2%", top: "50%", transform: "translateY(-50%)",
+          fontFamily: "'Shippori Mincho', serif",
+          fontSize: "clamp(180px, 22vw, 300px)",
+          color: "rgba(196,168,124,0.07)",
+          lineHeight: 1, userSelect: "none", pointerEvents: "none",
+        }}>湯</div>
+        <FadeIn>
+          <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center", position: "relative" }}>
+            <p style={{
+              fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 9,
+              letterSpacing: 7, color: "#c4a87c", marginBottom: 36,
+            }}>OUR PHILOSOPHY</p>
+            <p style={{
+              fontFamily: "'Shippori Mincho', serif",
+              fontSize: "clamp(28px, 4.5vw, 42px)",
+              color: "#2c2418", fontWeight: 400,
+              letterSpacing: 8, lineHeight: 1.4, marginBottom: 0,
+            }}>一湯入魂</p>
+            <div style={{ width: 1, height: 56, background: "linear-gradient(to bottom, #c4a87c, transparent)", margin: "32px auto 32px" }} />
+            <p style={{
+              fontFamily: "'Noto Serif JP', serif", fontSize: 15,
+              color: "#6b5e50", lineHeight: 3, letterSpacing: 1,
+            }}>
+              一期一会のお客様を、一つひとつの湯で迎える。<br />
+              湯雲閣が守り続ける、明治からのおもてなしの心。
+            </p>
+          </div>
+        </FadeIn>
+      </div>
+
       {/* Features grid */}
       <div style={{ background: "#2c2418", padding: "80px 20px" }}>
         <FadeIn>
@@ -280,76 +343,107 @@ function HomePage({ navigate }) {
         </div>
       </div>
 
-      {/* Seasonal banner */}
+      {/* CTA banner */}
       <div style={{
-        position: "relative", height: 360, overflow: "hidden",
+        position: "relative", overflow: "hidden",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <div style={{
           position: "absolute", inset: 0,
           backgroundImage: `url(${IMG.bamboo})`, backgroundSize: "cover",
-          backgroundPosition: "center", filter: "brightness(0.4)",
+          backgroundPosition: "center", filter: "brightness(0.38)",
         }} />
         <FadeIn>
-          <div style={{ position: "relative", textAlign: "center", color: "#fff", padding: "0 20px" }}>
+          <div style={{ position: "relative", textAlign: "center", color: "#fff", padding: mobile ? "72px 24px" : "100px 40px" }}>
             <p style={{
-              fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11,
-              letterSpacing: 6, opacity: 0.5, marginBottom: 12,
-            }}>SEASONAL</p>
+              fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
+              letterSpacing: 7, opacity: 0.5, marginBottom: 20,
+            }}>RESERVATION</p>
             <h2 style={{
-              fontFamily: "'Shippori Mincho', serif", fontSize: "clamp(22px, 4vw, 32px)",
-              fontWeight: 400, letterSpacing: 6, marginBottom: 16,
-            }}>春の特別プラン</h2>
+              fontFamily: "'Shippori Mincho', serif", fontSize: "clamp(24px, 4vw, 36px)",
+              fontWeight: 400, letterSpacing: 6, marginBottom: 20,
+            }}>ご予約・お問い合わせ</h2>
+            <div style={{ width: 40, height: 1, background: "rgba(196,168,124,0.7)", margin: "0 auto 24px" }} />
             <p style={{
-              fontFamily: "'Noto Serif JP', serif", fontSize: 14, lineHeight: 2.2,
-              opacity: 0.7, maxWidth: 450, margin: "0 auto",
+              fontFamily: "'Noto Serif JP', serif", fontSize: 14, lineHeight: 2.4,
+              opacity: 0.65, maxWidth: 480, margin: "0 auto",
             }}>
-              桜舞う季節、越前の春の味覚とともに。<br />
-              期間限定の特別会席と貸切露天風呂をお楽しみください。
+              お電話またはウェブフォームにて承っております。<br />
+              ご不明な点はお気軽にお問い合わせください。
             </p>
-            <button
-              onClick={() => navigate(PAGES.PLANS)}
-              style={{
-                marginTop: 28, padding: "12px 36px",
-                background: "transparent", border: "1px solid rgba(255,255,255,0.4)",
-                color: "#fff", fontFamily: "'Zen Kaku Gothic New', sans-serif",
-                fontSize: 12, letterSpacing: 3, cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={e => { e.target.style.background = "#fff"; e.target.style.color = "#2c2418"; }}
-              onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#fff"; }}
-            >プランを見る</button>
+            <div style={{ display: "flex", gap: 16, marginTop: 36, justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                onClick={() => navigate(PAGES.RESERVE)}
+                style={{
+                  padding: "13px 40px",
+                  background: "#c4a87c", border: "none",
+                  color: "#fff", fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                  fontSize: 12, letterSpacing: 3, cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={e => { e.target.style.background = "#b09060"; }}
+                onMouseLeave={e => { e.target.style.background = "#c4a87c"; }}
+              >ご予約はこちら</button>
+              <button
+                onClick={() => navigate(PAGES.PLANS)}
+                style={{
+                  padding: "13px 40px",
+                  background: "transparent", border: "1px solid rgba(255,255,255,0.4)",
+                  color: "#fff", fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                  fontSize: 12, letterSpacing: 3, cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={e => { e.target.style.borderColor = "rgba(255,255,255,0.8)"; }}
+                onMouseLeave={e => { e.target.style.borderColor = "rgba(255,255,255,0.4)"; }}
+              >料金・プランを見る</button>
+            </div>
           </div>
         </FadeIn>
       </div>
 
       {/* Info bar */}
-      <div style={{ background: "#f7f3ee", padding: "60px 20px" }}>
-        <div style={{
-          maxWidth: 900, margin: "0 auto",
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 40,
-          textAlign: "center",
-        }}>
-          {[
-            { label: "チェックイン", value: "15:00〜18:00" },
-            { label: "チェックアウト", value: "〜10:00" },
-            { label: "お電話", value: "0776-XX-XXXX" },
-            { label: "総客室数", value: "全18室" },
-          ].map((item, i) => (
-            <FadeIn key={i} delay={i * 0.1}>
-              <div>
-                <p style={{
-                  fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 10,
-                  letterSpacing: 4, color: "#8b7355", marginBottom: 8,
-                }}>{item.label}</p>
-                <p style={{
-                  fontFamily: "'Shippori Mincho', serif", fontSize: 22,
-                  color: "#2c2418", margin: 0, letterSpacing: 2,
-                }}>{item.value}</p>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
+      <div style={{ background: "#faf7f3", padding: "80px 20px", borderTop: "1px solid #e8dcc8" }}>
+        <FadeIn>
+          <SectionTitle ja="ご案内" en="INFORMATION" />
+        </FadeIn>
+        <FadeIn delay={0.2}>
+          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(4, 1fr)",
+              borderTop: "1px solid #ddd3c2",
+              borderLeft: "1px solid #ddd3c2",
+            }}>
+              {[
+                { label: "チェックイン", labelEn: "CHECK-IN", value: "15:00〜18:00" },
+                { label: "チェックアウト", labelEn: "CHECK-OUT", value: "〜10:00" },
+                { label: "お電話", labelEn: "TELEPHONE", value: "0776-XX-XXXX" },
+                { label: "総客室数", labelEn: "ROOMS", value: "全18室" },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  padding: "36px 20px", textAlign: "center",
+                  borderRight: "1px solid #ddd3c2",
+                  borderBottom: "1px solid #ddd3c2",
+                  background: "#fff",
+                }}>
+                  <p style={{
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 9,
+                    letterSpacing: 5, color: "#c4a87c", marginBottom: 14,
+                  }}>{item.labelEn}</p>
+                  <p style={{
+                    fontFamily: "'Shippori Mincho', serif", fontSize: 14,
+                    color: "#8b7355", marginBottom: 10, letterSpacing: 2,
+                  }}>{item.label}</p>
+                  <div style={{ width: 20, height: 1, background: "#c4a87c", margin: "0 auto 14px" }} />
+                  <p style={{
+                    fontFamily: "'Shippori Mincho', serif", fontSize: 22,
+                    color: "#2c2418", letterSpacing: 2, margin: 0,
+                  }}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </FadeIn>
       </div>
     </div>
   );
