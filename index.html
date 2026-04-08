@@ -417,7 +417,7 @@ function HomePage({ navigate }) {
               {[
                 { label: "チェックイン", labelEn: "CHECK-IN", value: "15:00〜18:00" },
                 { label: "チェックアウト", labelEn: "CHECK-OUT", value: "〜10:00" },
-                { label: "お電話", labelEn: "TELEPHONE", value: "0776-XX-XXXX" },
+                { label: "お電話", labelEn: "TELEPHONE", value: "0776-77-0000" },
                 { label: "総客室数", labelEn: "ROOMS", value: "全18室" },
               ].map((item, i) => (
                 <div key={i} style={{
@@ -886,7 +886,7 @@ function PlansPage() {
               <p style={{
                 fontFamily: "'Noto Serif JP', serif", fontSize: 13, color: "#6b5e50", lineHeight: 2.2,
               }}>
-                ご予約はお電話（0776-XX-XXXX）または公式ウェブサイトにて承っております。
+                ご予約はお電話（0776-77-0000）または公式ウェブサイトにて承っております。
                 繁忙期（GW・お盆・年末年始）は早めのご予約をおすすめいたします。
                 キャンセル料は3日前から発生いたします（3日前30%、前日50%、当日100%）。
               </p>
@@ -927,7 +927,7 @@ function AccessPage() {
                 }}>📍 湯雲閣</p>
                 <p style={{
                   fontFamily: "'Noto Serif JP', serif", fontSize: 13, color: "#6b5e50",
-                }}>〒910-4XXX 福井県あわら市温泉X丁目X-X</p>
+                }}>〒919-0611 福井県あわら市湯けむり1丁目1番地</p>
               </div>
             </div>
           </FadeIn>
@@ -1014,7 +1014,7 @@ function FAQPage() {
 
   const faqs = [
     { q: "チェックイン・チェックアウトの時間は？", a: "チェックインは15:00〜18:00、チェックアウトは10:00でございます。プレミアムプラン・スイートプランをご利用のお客様は11:00までのレイトチェックアウトが可能です。18:00以降のチェックインをご希望の場合は、事前にお電話にてお知らせください。" },
-    { q: "送迎はありますか？", a: "はい、JR芦原温泉駅から無料送迎を行っております。送迎時間は14:00〜17:00の間で、前日までの事前予約制となります。帰りは9:30と10:30の2便がございます。お電話（0776-XX-XXXX）にてご予約ください。" },
+    { q: "送迎はありますか？", a: "はい、JR芦原温泉駅から無料送迎を行っております。送迎時間は14:00〜17:00の間で、前日までの事前予約制となります。帰りは9:30と10:30の2便がございます。お電話（0776-77-0000）にてご予約ください。" },
     { q: "駐車場はありますか？", a: "はい、無料駐車場を30台分ご用意しております。大型車（マイクロバス等）をご利用の場合は、事前にご連絡いただけますようお願いいたします。" },
     { q: "子供も宿泊できますか？", a: "はい、お子様も大歓迎です。小学生のお子様は大人料金の70%、幼児（食事・布団あり）は50%、幼児（食事・布団なし）は無料でございます。お子様用の浴衣、歯ブラシなどのアメニティもご用意しております。お子様用の食事は和食のお子様ランチとなります。" },
     { q: "アレルギー対応はしてもらえますか？", a: "はい、食物アレルギーをお持ちのお客様には、可能な限り対応させていただきます。ご予約時またはご宿泊3日前までにお電話にてお知らせください。アレルギーの種類や程度によっては対応が難しい場合もございますので、まずはお気軽にご相談ください。" },
@@ -1113,7 +1113,7 @@ function FAQPage() {
               </p>
               <p style={{
                 fontFamily: "'Shippori Mincho', serif", fontSize: 24, letterSpacing: 3,
-              }}>0776-XX-XXXX</p>
+              }}>0776-77-0000</p>
               <p style={{
                 fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11, opacity: 0.5, marginTop: 8,
               }}>受付時間 8:00〜21:00</p>
@@ -1458,7 +1458,7 @@ function ReservePage() {
               <p style={{
                 fontFamily: "'Shippori Mincho', serif", fontSize: 24, letterSpacing: 3,
                 marginBottom: 8,
-              }}>0776-XX-XXXX</p>
+              }}>0776-77-0000</p>
               <p style={{
                 fontFamily: "'Zen Kaku Gothic New', sans-serif", fontSize: 11, opacity: 0.5,
               }}>受付時間 9:00〜20:00</p>
@@ -1472,13 +1472,29 @@ function ReservePage() {
 
 // ======================== MAIN APP ========================
 function App() {
-  const [page, setPage] = useState(PAGES.HOME);
+  const getPageFromHash = () => {
+    const hash = window.location.hash.replace('#', '');
+    return Object.values(PAGES).includes(hash) ? hash : PAGES.HOME;
+  };
+  const [page, setPage] = useState(() => getPageFromHash());
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const contentRef = useRef(null);
   const mobile = useIsMobile();
 
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      const p = Object.values(PAGES).includes(hash) ? hash : PAGES.HOME;
+      setPage(p);
+      if (contentRef.current) contentRef.current.scrollTo({ top: 0, behavior: "instant" });
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   const navigate = (p) => {
+    window.location.hash = p === PAGES.HOME ? '' : p;
     setPage(p);
     setMenuOpen(false);
     if (contentRef.current) contentRef.current.scrollTo({ top: 0, behavior: "instant" });
@@ -1617,7 +1633,7 @@ function App() {
       <div
         ref={contentRef}
         onScroll={handleScroll}
-        style={{ height: "100vh", overflowY: "auto", overflowX: "hidden" }}
+        style={{ height: "100vh", overflowY: "auto", overflowX: "hidden", paddingBottom: 36 }}
       >
         {page === PAGES.HOME && <HomePage navigate={navigate} />}
         {page === PAGES.ROOMS && <RoomsPage />}
@@ -1646,9 +1662,9 @@ function App() {
                 fontFamily: "'Noto Serif JP', serif", fontSize: 12,
                 lineHeight: 2.2, opacity: 0.5,
               }}>
-                〒910-4XXX<br />
-                福井県あわら市温泉X丁目X-X<br />
-                TEL: 0776-XX-XXXX
+                〒919-0611<br />
+                福井県あわら市湯けむり1丁目1番地<br />
+                TEL: 0776-77-0000
               </p>
             </div>
             <div>
@@ -1700,6 +1716,22 @@ function App() {
             }}>© 2024 湯雲閣 YUUNKAKU. All Rights Reserved. ※このサイトは架空の旅館のデモサイトです。</p>
           </div>
         </footer>
+      </div>
+
+      {/* TEST SITE banner */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        zIndex: 8500,
+        background: "rgba(26,26,24,0.95)",
+        padding: "9px 20px",
+        textAlign: "center",
+        fontSize: "0.68rem",
+        color: "#c4a87c",
+        backdropFilter: "blur(8px)",
+        fontFamily: "'Zen Kaku Gothic New', sans-serif",
+        letterSpacing: 1,
+      }}>
+        🛠 TEST SITE — これはチャットボット導入テスト用のデモサイトです。実際の店舗はありません。
       </div>
     </div>
   );
